@@ -25,7 +25,9 @@ string gentempcode();
 
 %start S
 
-%left '+'
+%left '+' '-'   
+%left '*' '/'   
+/* + e - tem procedência mais baixa que * e / */
 
 %%
 
@@ -37,21 +39,39 @@ S 			: E
 
 				codigo_gerado += $1.traducao;
 
-				codigo_gerado += "\treturn 0;"
-							"\n}\n";
+				codigo_gerado += "\treturn 0;\n";
+				codigo_gerado += "}\n";
 			}
 			;
 
-E 			: E '+' E
+E 			: E '+' E  /* uma expressão E pode ser formada por uma expressão seguida de um símbolo "+", seguida de outra expressão */
 			{
+				$$.label = gentempcode(); /* gentempcode() cria um nome único de variável temporária */
+				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
+					" = " + $1.label  /* T1*/+ " + " + $3.label /*T3*/ + ";\n"; 
+			}
+			|
+			 E '-' E {
 				$$.label = gentempcode();
 				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
-					" = " + $1.label + " + " + $3.label + ";\n";
+					" = " + $1.label + " - " + $3.label + ";\n";
+			}
+			| 
+			 E '/' E {
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
+					" = " + $1.label + " / " + $3.label + ";\n";
+			}
+			|
+			 E '*' E {
+				$$.label = gentempcode();
+				$$.traducao = $1.traducao + $3.traducao + "\t" + $$.label +
+					" = " + $1.label + " * " + $3.label + ";\n";
 			}
 			| TK_NUM
 			{
-				$$.label = gentempcode();
-				$$.traducao = "\t" + $$.label + " = " + $1.label + ";\n";
+				$$.label = $1.label;
+				$$.traducao = "";
 			}
 			;
 
