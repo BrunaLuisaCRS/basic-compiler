@@ -1,6 +1,7 @@
 %{
 #include <iostream>
 #include <string>
+#include <stdio.h>
 
 #define YYSTYPE atributos
 
@@ -19,6 +20,9 @@ struct atributos
 int yylex(void);
 void yyerror(string);
 string gentempcode();
+
+/* ponteiro para o arquivo de onde o lexer vai ler */
+extern FILE *yyin;
 %}
 
 %token TK_NUM
@@ -27,7 +31,6 @@ string gentempcode();
 
 %left '+' '-'   
 %left '*' '/'   
-/* + e - tem procedência mais baixa que * e / */
 
 %%
 
@@ -43,7 +46,6 @@ S 			: E
 				codigo_gerado += "}\n";
 			}
 			;
-
 E /* $$*/: E /* $1*/ '+' E /* $2* -> uma expressão E pode ser formada por uma expressão seguida de um símbolo "+", seguida de outra expressão */
 			{
 				$$.label = gentempcode(); /* cria um nome único de variável temporária para o resultado dessa conta, vai trazer em traducao tudo q é necessário p/ fazer  aconta*/
@@ -97,6 +99,17 @@ string gentempcode()
 int main(int argc, char* argv[])
 {
 	var_temp_qnt = 0;
+
+	/* leitura de arquivo */
+	if (argc > 1)
+	{
+		yyin = fopen(argv[1], "r");
+		if (!yyin)
+		{
+			perror("Erro ao abrir arquivo");
+			return 1;
+		}
+	}
 
 	if (yyparse() == 0)
 		cout << codigo_gerado;
